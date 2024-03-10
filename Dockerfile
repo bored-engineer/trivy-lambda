@@ -5,7 +5,8 @@ FROM ghcr.io/aquasecurity/trivy:$TRIVY_VERSION AS trivy
 FROM --platform=$BUILDPLATFORM ghcr.io/aquasecurity/trivy:$TRIVY_VERSION as download
 
 # https://aquasecurity.github.io/trivy/v0.49/docs/advanced/air-gap/
-RUN trivy image --download-db-only && trivy image --download-java-db-only
+ARG CACHEBUST=1
+RUN echo $CACHEBUST && trivy image --download-db-only && trivy image --download-java-db-only
 
 # Compile the Lambda binary
 FROM public.ecr.aws/docker/library/golang:1.22-bullseye as builder
