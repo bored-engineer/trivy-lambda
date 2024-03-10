@@ -24,10 +24,16 @@ jobs:
         with:
           registry-type: public
 
-      - name: Build and Push image to Amazon ECR
-        run: |
-          docker buildx build \
-            --push \
-            --platform linux/arm64,linux/amd64 \
-            --tag public.ecr.aws/t9f5l7n9/trivy-lambda:latest \
-            .
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: public.ecr.aws/t9f5l7n9/trivy-lambda:latest
