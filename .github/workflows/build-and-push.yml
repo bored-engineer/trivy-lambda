@@ -31,6 +31,8 @@ jobs:
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -42,3 +44,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: public.ecr.aws/t9f5l7n9/trivy-lambda:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
