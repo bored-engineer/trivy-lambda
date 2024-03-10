@@ -26,4 +26,8 @@ jobs:
 
       - name: Build and Push image to Amazon ECR
         run: |
-          docker build --push -t public.ecr.aws/t9f5l7n9/trivy-lambda:latest
+          docker build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --tag public.ecr.aws/t9f5l7n9/trivy-lambda:latest \
+            .
