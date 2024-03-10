@@ -1,8 +1,13 @@
 name: Build & Push
 on:
+  schedule:
+    # https://github.com/aquasecurity/trivy-db/blob/db9bf07792afba73dceb20b99723c8af007da1f8/.github/workflows/cron.yml#L5
+    # https://github.com/aquasecurity/trivy-java-db/blob/be4b443fed1db725fb1d21688567a5b644df9ea7/.github/workflows/cron.yml#L5
+    - cron: '30 */6 * * *'
   push:
     branches:
       - main
+  workflow_dispatch:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
