@@ -1,0 +1,26 @@
+name: Build & Push
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::396667938998:role/trivy-lambda
+          aws-region: us-west-2
+      
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Build and Push image to Amazon ECR
+        run: |
+          docker build --push -t public.ecr.aws/t9f5l7n9/trivy-lambda:latest
