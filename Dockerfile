@@ -1,7 +1,8 @@
 ARG TRIVY_VERSION=0.49.1
+FROM ghcr.io/aquasecurity/trivy:$TRIVY_VERSION AS trivy
 
-# Download the trivy DBs using the oras CLI
-FROM ghcr.io/aquasecurity/trivy:$TRIVY_VERSION as download
+# Download the trivy DBs using the trivy CLI, only need to run on the native platform
+FROM --platform=$BUILDPLATFORM ghcr.io/aquasecurity/trivy:$TRIVY_VERSION as download
 
 # https://aquasecurity.github.io/trivy/v0.49/docs/advanced/air-gap/
 RUN trivy image --download-db-only && trivy image --download-java-db-only
@@ -18,7 +19,7 @@ RUN go build -o /lambda
 FROM public.ecr.aws/lambda/provided:al2023
 
 # Copy the trivy CLI from the upstream official image
-COPY --from=download /usr/local/bin/trivy /usr/local/bin/trivy
+COPY --from=trivy /usr/local/bin/trivy /usr/local/bin/trivy
 
 # Copy the downloaded trivy DBs from the download stage
 COPY --from=download /root/.cache/trivy/ /airgap/
