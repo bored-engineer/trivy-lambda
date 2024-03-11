@@ -38,6 +38,7 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
+          provenance: false
           tags: ghcr.io/bored-engineer/trivy-lambda:latest-amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -48,6 +49,7 @@ jobs:
           context: .
           platforms: linux/arm64
           push: true
+          provenance: false
           tags: ghcr.io/bored-engineer/trivy-lambda:latest-arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
