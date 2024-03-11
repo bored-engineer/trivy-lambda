@@ -30,24 +30,24 @@ func invoke(ctx context.Context, args []string) (*result, error) {
 
 	// Create a new temporary directory for the Trivy cache for this invocation
 	// We will remove it after the invocation to avoid filling up the /tmp directory
-	cacheDir, err := os.MkdirTemp(os.Getenv("TRIVY_TMP"), "trivy-cache-*")
+	tmpDir, err := os.MkdirTemp(os.Getenv("TRIVY_TMP"), "trivy-cache-*")
 	if err != nil {
 		return nil, fmt.Errorf("os.MkdirTemp failed: %w", err)
 	}
-	defer os.RemoveAll(cacheDir)
-	cmd.Env = append(cmd.Env, fmt.Sprintf("TRIVY_CACHE_DIR=%s", cacheDir))
-	outputFile := filepath.Join(cacheDir, "output")
+	defer os.RemoveAll(tmpDir)
+	cmd.Env = append(cmd.Env, fmt.Sprintf("TRIVY_CACHE_DIR=%s", tmpDir))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("TMPDIR=%s", tmpDir))
+	outputFile := filepath.Join(tmpDir, "output")
 	cmd.Env = append(cmd.Env, fmt.Sprintf("TRIVY_OUTPUT=%s", outputFile))
 
 	// Symlink the air-gapped DBs from the image layers to the cache directory and disable auto-update
-	if err := os.Symlink("/airgap/java-db", filepath.Join(cacheDir, "java-db")); err != nil {
-		return nil, fmt.Errorf("os.Symlink failed: %w", err)
+	offlineCacheDir := "/root/.cache/trivy"
+	for _, directory := range []string{"policy", "java-db", "db"} {
+		src, dst := filepath.Join(offlineCacheDir, directory), filepath.Join(tmpDir, directory)
+		if err := os.Symlink(src, dst); err != nil {
+			return nil, fmt.Errorf("os.Symlink from %q to %q failed: %w", src, dst, err)
+		}
 	}
-	cmd.Env = append(cmd.Env, "TRIVY_SKIP_JAVA_DB_UPDATE=true")
-	if err := os.Symlink("/airgap/db", filepath.Join(cacheDir, "db")); err != nil {
-		return nil, fmt.Errorf("os.Symlink failed: %w", err)
-	}
-	cmd.Env = append(cmd.Env, "TRIVY_SKIP_DB_UPDATE=true")
 
 	// Execute, capturing the exit-code if any
 	var r result
