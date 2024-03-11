@@ -1,9 +1,8 @@
 name: Build & Push
 on:
   schedule:
-    # https://github.com/aquasecurity/trivy-db/blob/db9bf07792afba73dceb20b99723c8af007da1f8/.github/workflows/cron.yml#L5
-    # https://github.com/aquasecurity/trivy-java-db/blob/be4b443fed1db725fb1d21688567a5b644df9ea7/.github/workflows/cron.yml#L5
-    - cron: '30 */6 * * *'
+    # https://github.com/bored-engineer/trivy-offline/blob/2f477b04d628de366c15c6c2668c6c30831b4176/.github/workflows/build-and-push.yml#L7
+    - cron: '35 */6 * * *'
   push:
     branches:
       - main
@@ -12,38 +11,43 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
+      packages: write
       contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::396667938998:role/trivy-lambda
-          aws-region: us-east-1
-      
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-        with:
-          registry-type: public
 
-      - name: Set up QEMU
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: bored-engineer
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
 
-      - name: Set up Docker Buildx
+      - name: Setup Docker
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push
+      - name: Build and Push (amd64)
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
-          tags: public.ecr.aws/t9f5l7n9/trivy-lambda:latest
+          tags: ghcr.io/bored-engineer/trivy-lambda:latest-amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: CACHEBUST=${{ github.run_id }}
+
+      - name: Build and Push (arm64)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: ghcr.io/bored-engineer/trivy-lambda:latest-arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
