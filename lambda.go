@@ -41,7 +41,7 @@ func invoke(ctx context.Context, args []string) (*result, error) {
 	cmd.Env = append(cmd.Env, fmt.Sprintf("TRIVY_OUTPUT=%s", outputFile))
 
 	// Symlink the air-gapped DBs from the image layers to the cache directory and disable auto-update
-	offlineCacheDir := "/root/.cache/trivy"
+	offlineCacheDir := "/offline"
 	for _, directory := range []string{"policy", "java-db", "db"} {
 		src, dst := filepath.Join(offlineCacheDir, directory), filepath.Join(tmpDir, directory)
 		if err := os.Symlink(src, dst); err != nil {
