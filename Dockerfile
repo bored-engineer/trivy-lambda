@@ -1,12 +1,4 @@
-ARG TRIVY_VERSION=0.49.1
-FROM ghcr.io/aquasecurity/trivy:$TRIVY_VERSION AS trivy
-
-# Download the trivy DBs using the trivy CLI, only need to run on the native platform
-FROM --platform=$BUILDPLATFORM ghcr.io/aquasecurity/trivy:$TRIVY_VERSION as download
-
-# https://aquasecurity.github.io/trivy/v0.49/docs/advanced/air-gap/
-ARG CACHEBUST=1
-RUN echo $CACHEBUST && trivy image --download-db-only && trivy image --download-java-db-only
+# syntax=docker/dockerfile:1.7-labs
 
 # Compile the Lambda binary
 FROM public.ecr.aws/docker/library/golang:1.22-bullseye as builder
@@ -16,15 +8,12 @@ RUN go mod download
 COPY lambda.go /app/
 RUN go build -o /lambda
 
-# Final build layer
+# Final build layer will use provided.al2023 as the base
 FROM public.ecr.aws/lambda/provided:al2023
 
-# Copy the trivy CLI from the upstream official image
-COPY --from=trivy /usr/local/bin/trivy /usr/local/bin/trivy
+# Copy the relevant artifacts from the latest offline image
+COPY --parents --from=ghcr.io/bored-engineer/trivy-offline:latest /usr/local/bin/trivy /contrib /root/.cache/trivy /
 
-# Copy the downloaded trivy DBs from the download stage
-COPY --from=download /root/.cache/trivy/ /airgap/
-
-# Copy the Lambda binary from the builder stage
+# Copy the Lambda binary from the builder stage and make it the entrypoint
 COPY --from=builder /lambda /usr/local/bin/lambda
 ENTRYPOINT [ "/usr/local/bin/lambda" ]
