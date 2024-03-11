@@ -13,6 +13,10 @@ RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /lambda
 FROM public.ecr.aws/lambda/provided:al2023
 
 # Copy the relevant artifacts from the latest offline image
+ENV TRIVY_OFFLINE_SCAN=true
+ENV TRIVY_SKIP_POLICY_UPDATE=true
+ENV TRIVY_SKIP_JAVA_DB_UPDATE=true
+ENV TRIVY_SKIP_DB_UPDATE=true
 COPY --parents --from=ghcr.io/bored-engineer/trivy-offline:latest /usr/local/bin/trivy /contrib /root/.cache/trivy /
 
 # Copy the Lambda binary from the builder stage and make it the entrypoint
