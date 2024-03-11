@@ -1,12 +1,13 @@
 # syntax=docker/dockerfile:1.7-labs
 
 # Compile the Lambda binary
-FROM public.ecr.aws/docker/library/golang:1.22.1-bullseye as builder
-WORKDIR /app
-COPY go.mod go.sum /app/
+FROM --platform=$BUILDPLATFORM public.ecr.aws/docker/library/golang:1.22.1-bullseye as builder
+WORKDIR /src
+COPY go.mod go.sum /src/
 RUN go mod download
-COPY lambda.go /app/
-RUN go build -o /lambda
+COPY lambda.go /src/
+ARG TARGETOS TARGETARCH
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /lambda
 
 # Final build layer will use provided.al2023 as the base
 FROM public.ecr.aws/lambda/provided:al2023
