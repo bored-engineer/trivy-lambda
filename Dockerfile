@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7-labs
 
 # Compile the Lambda binary
-FROM public.ecr.aws/docker/library/golang:1.22-bullseye as builder
+FROM public.ecr.aws/docker/library/golang:1.22.1-bullseye as builder
 WORKDIR /app
 COPY go.mod go.sum /app/
 RUN go mod download
